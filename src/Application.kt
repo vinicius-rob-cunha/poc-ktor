@@ -12,7 +12,10 @@ import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.install
-import io.ktor.auth.*
+import io.ktor.auth.Authentication
+import io.ktor.auth.UserIdPrincipal
+import io.ktor.auth.authenticate
+import io.ktor.auth.basic
 import io.ktor.features.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -88,15 +91,6 @@ fun Application.module(testing: Boolean = false) {
             call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
         }
 
-        post("/imcs/calculo") {
-            val pedido = call.extractBody(BasicPedidoImc::class)
-            val response = CalculadoraImc().verificarCondicaoImc(pedido)
-            response.id = (0..100).random()
-
-            call.response.headers.append("Location", "/imcs/calculo/${response.id}")
-            call.respond(HttpStatusCode.Created, response)
-        }
-
         install(StatusPages) {
             exception<AuthenticationException> { cause ->
                 call.respond(HttpStatusCode.Unauthorized)
@@ -108,10 +102,16 @@ fun Application.module(testing: Boolean = false) {
         }
 
         authenticate("myBasicAuth") {
-            get("/protected/route/basic") {
-                val principal = call.principal<UserIdPrincipal>()!!
-                call.respondText("Hello ${principal.name}")
+
+            post("/imcs/calculo") {
+                val pedido = call.extractBody(BasicPedidoImc::class)
+                val response = CalculadoraImc().verificarCondicaoImc(pedido)
+                response.id = (0..100).random()
+
+                call.response.headers.append("Location", "/imcs/calculo/${response.id}")
+                call.respond(HttpStatusCode.Created, response)
             }
+
         }
 
         get("/json/jackson") {
