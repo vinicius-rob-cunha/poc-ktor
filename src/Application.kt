@@ -106,7 +106,7 @@ fun Application.module(testing: Boolean = false) {
             post("/imcs/calculo") {
                 val pedido = call.extractBody(BasicPedidoImc::class)
                 val response = CalculadoraImc().verificarCondicaoImc(pedido)
-                response.id = (0..100).random()
+                response.id = (1..100).random()
 
                 call.response.headers.append("Location", "/imcs/calculo/${response.id}")
                 call.respond(HttpStatusCode.Created, response)
@@ -114,9 +114,6 @@ fun Application.module(testing: Boolean = false) {
 
         }
 
-        get("/json/jackson") {
-            call.respond(mapOf("hello" to "world"))
-        }
     }
 }
 

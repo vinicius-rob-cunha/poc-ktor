@@ -52,7 +52,6 @@ class ImcApiPostTest extends Specification {
 
         when: 'Requisição com JSON inválido'
         this.cliente.post(path: this.uriEndpoint,
-                          headers : this.criarHeader(),
                           body: [nome:888, altura:'toma', peso: 'olha', sexo: 1])
 
         then:
