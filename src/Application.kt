@@ -3,6 +3,7 @@ package br.com.vroc
 //import io.ktor.client.features.auth.basic.*
 import br.com.vroc.ktor.imc.BasicPedidoImc
 import br.com.vroc.ktor.imc.CalculadoraImc
+import br.com.vroc.ktor.imc.ResultadoImc
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -36,6 +37,7 @@ import kotlin.reflect.KClass
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
+@KtorExperimentalAPI
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
@@ -112,11 +114,22 @@ fun Application.module(testing: Boolean = false) {
                 call.respond(HttpStatusCode.Created, response)
             }
 
+            get("/imcs/{id}") {
+                val requestedId = call.parameters["id"]
+
+                if(requestedId == null || requestedId.toInt() < 1)
+                    throw NotFoundException("Nenhum imc encontrado com id $requestedId")
+
+                val response = ResultadoImc(nome="Goku", imc=24.7).apply {
+                    id = requestedId.toInt()
+                    condicao = "Peso normal"
+                }
+
+                call.respond(response)
+            }
+
         }
 
-        get("/json/jackson") {
-            call.respond(mapOf("hello" to "world"))
-        }
     }
 }
 
