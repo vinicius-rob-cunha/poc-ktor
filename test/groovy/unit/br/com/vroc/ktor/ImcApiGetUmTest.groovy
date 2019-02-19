@@ -2,7 +2,6 @@ package unit.br.com.vroc.ktor
 
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
-import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import spock.lang.Specification
 
@@ -13,10 +12,6 @@ class ImcApiGetUmTest extends Specification {
     RESTClient cliente
     def urlBase = 'http://localhost:8080'
     def uriEndpoint = '/imcs/1'
-
-    private def criarPedido() {
-        [nome:'Ze Magrinho', altura:1.75, peso: 71, sexo: 'MASCULINO']
-    }
 
     def setup() {
         this.cliente = new RESTClient(this.urlBase, JSON)

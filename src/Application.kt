@@ -21,7 +21,11 @@ import io.ktor.features.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.Created
+import io.ktor.http.HttpStatusCode.Companion.Forbidden
+import io.ktor.http.HttpStatusCode.Companion.NoContent
+import io.ktor.http.HttpStatusCode.Companion.OK
+import io.ktor.http.HttpStatusCode.Companion.Unauthorized
 import io.ktor.jackson.jackson
 import io.ktor.request.path
 import io.ktor.request.receiveOrNull
@@ -95,10 +99,10 @@ fun Application.module(testing: Boolean = false) {
 
         install(StatusPages) {
             exception<AuthenticationException> { cause ->
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(Unauthorized)
             }
             exception<AuthorizationException> { cause ->
-                call.respond(HttpStatusCode.Forbidden)
+                call.respond(Forbidden)
             }
 
         }
@@ -111,7 +115,7 @@ fun Application.module(testing: Boolean = false) {
                 response.id = (0..100).random()
 
                 call.response.headers.append("Location", "/imcs/calculo/${response.id}")
-                call.respond(HttpStatusCode.Created, response)
+                call.respond(Created, response)
             }
 
             get("/imcs/{id}") {
@@ -126,6 +130,28 @@ fun Application.module(testing: Boolean = false) {
                 }
 
                 call.respond(response)
+            }
+
+            get("/imcs") {
+                val filterApartir = call.parameters["apartir"]?.toInt() ?: Int.MIN_VALUE
+                val filterAte = call.parameters["ate"]?.toInt() ?: Int.MAX_VALUE
+
+                val response = mutableListOf<ResultadoImc>()
+
+                if(filterApartir < Int.MAX_VALUE && filterAte > Int.MIN_VALUE) {
+                    response.apply {
+                        add(ResultadoImc(nome = "Goku", imc = 24.7).apply {
+                            id = 1
+                            condicao = "Peso normal"
+                        })
+                        add(ResultadoImc(nome = "Saga", imc = 26.7).apply {
+                            id = 2
+                            condicao = "Peso normal"
+                        })
+                    }
+                }
+
+                call.respond(if(response.isEmpty()) NoContent else OK, response)
             }
 
         }
