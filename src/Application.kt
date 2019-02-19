@@ -31,6 +31,7 @@ import io.ktor.request.path
 import io.ktor.request.receiveOrNull
 import io.ktor.response.respond
 import io.ktor.response.respondText
+import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
@@ -152,6 +153,15 @@ fun Application.module(testing: Boolean = false) {
                 }
 
                 call.respond(if(response.isEmpty()) NoContent else OK, response)
+            }
+
+            delete("/imcs/{id}") {
+                val requestedId = call.parameters["id"]
+
+                if(requestedId == null || requestedId.toInt() < 1)
+                    throw NotFoundException("Nenhum imc encontrado com id $requestedId")
+
+                call.respond(OK)
             }
 
         }
