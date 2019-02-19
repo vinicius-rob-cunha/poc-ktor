@@ -51,8 +51,7 @@ class ImcApiPostTest extends Specification {
         ex.statusCode == HttpStatus.SC_BAD_REQUEST
 
         when: 'Requisição com JSON inválido'
-        this.cliente.post(path: this.uriEndpoint,
-                          body: [nome:888, altura:'toma', peso: 'olha', sexo: 1])
+        this.cliente.post(path: this.uriEndpoint, body: [nome:888, altura:'toma', peso: 'olha', sexo: 1])
 
         then:
         ex = thrown(HttpResponseException)

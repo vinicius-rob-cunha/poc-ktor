@@ -3,6 +3,7 @@ package br.com.vroc
 //import io.ktor.client.features.auth.basic.*
 import br.com.vroc.ktor.imc.BasicPedidoImc
 import br.com.vroc.ktor.imc.CalculadoraImc
+import br.com.vroc.ktor.imc.ResultadoImc
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -20,12 +21,17 @@ import io.ktor.features.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.Created
+import io.ktor.http.HttpStatusCode.Companion.Forbidden
+import io.ktor.http.HttpStatusCode.Companion.NoContent
+import io.ktor.http.HttpStatusCode.Companion.OK
+import io.ktor.http.HttpStatusCode.Companion.Unauthorized
 import io.ktor.jackson.jackson
 import io.ktor.request.path
 import io.ktor.request.receiveOrNull
 import io.ktor.response.respond
 import io.ktor.response.respondText
+import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
@@ -36,6 +42,7 @@ import kotlin.reflect.KClass
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
+@KtorExperimentalAPI
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
@@ -93,10 +100,10 @@ fun Application.module(testing: Boolean = false) {
 
         install(StatusPages) {
             exception<AuthenticationException> { cause ->
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(Unauthorized)
             }
             exception<AuthorizationException> { cause ->
-                call.respond(HttpStatusCode.Forbidden)
+                call.respond(Forbidden)
             }
 
         }
@@ -106,10 +113,55 @@ fun Application.module(testing: Boolean = false) {
             post("/imcs/calculo") {
                 val pedido = call.extractBody(BasicPedidoImc::class)
                 val response = CalculadoraImc().verificarCondicaoImc(pedido)
-                response.id = (1..100).random()
+                response.id = (0..100).random()
 
                 call.response.headers.append("Location", "/imcs/calculo/${response.id}")
-                call.respond(HttpStatusCode.Created, response)
+                call.respond(Created, response)
+            }
+
+            get("/imcs/{id}") {
+                val requestedId = call.parameters["id"]
+
+                if(requestedId == null || requestedId.toInt() < 1)
+                    throw NotFoundException("Nenhum imc encontrado com id $requestedId")
+
+                val response = ResultadoImc(nome="Goku", imc=24.7).apply {
+                    id = requestedId.toInt()
+                    condicao = "Peso normal"
+                }
+
+                call.respond(response)
+            }
+
+            get("/imcs") {
+                val filterApartir = call.parameters["apartir"]?.toInt() ?: Int.MIN_VALUE
+                val filterAte = call.parameters["ate"]?.toInt() ?: Int.MAX_VALUE
+
+                val response = mutableListOf<ResultadoImc>()
+
+                if(filterApartir < Int.MAX_VALUE && filterAte > Int.MIN_VALUE) {
+                    response.apply {
+                        add(ResultadoImc(nome = "Goku", imc = 24.7).apply {
+                            id = 1
+                            condicao = "Peso normal"
+                        })
+                        add(ResultadoImc(nome = "Saga", imc = 26.7).apply {
+                            id = 2
+                            condicao = "Peso normal"
+                        })
+                    }
+                }
+
+                call.respond(if(response.isEmpty()) NoContent else OK, response)
+            }
+
+            delete("/imcs/{id}") {
+                val requestedId = call.parameters["id"]
+
+                if(requestedId == null || requestedId.toInt() < 1)
+                    throw NotFoundException("Nenhum imc encontrado com id $requestedId")
+
+                call.respond(OK)
             }
 
         }
