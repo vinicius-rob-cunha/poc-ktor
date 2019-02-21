@@ -1,5 +1,6 @@
 package unit.br.com.vroc.ktor
 
+import br.com.vroc.ApplicationKt
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 import org.apache.http.HttpStatus
@@ -7,7 +8,7 @@ import spock.lang.Specification
 
 import static groovyx.net.http.ContentType.JSON
 
-class ImcApiPostTest extends Specification {
+class ImcApiPostTest extends KtorSpec {
 
     RESTClient cliente
     def urlBase = 'http://localhost:8080'
